@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>社員食堂ログ</title>
+    <style>
+        /* 漆黒×レッドの専用テーマ */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #000000;
+            color: #FF3333;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            background-color: #000000;
+            display: flex;
+            flex-direction: column;
+        }
+        header { text-align: center; margin-bottom: 25px; padding-top: 10px; }
+        h1 { font-size: 24px; letter-spacing: 2px; color: #FF3333; }
+        
+        .main-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        /* ボタンを上に配置 */
+        button {
+            width: 100%;
+            background-color: #FF3333;
+            color: #000000;
+            border: none;
+            padding: 20px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 51, 51, 0.3);
+            transition: 0.2s;
+        }
+        button:active { transform: scale(0.96); box-shadow: none; }
+        
+        .input-group label {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-align: center;
+            color: #FF3333;
+        }
+        input {
+            width: 100%;
+            background-color: #111111;
+            color: #FF3333;
+            border: 2px solid #FF3333;
+            padding: 20px;
+            font-size: 32px;
+            text-align: center;
+            border-radius: 8px;
+            outline: none;
+        }
+        input:focus { background-color: #221111; box-shadow: 0 0 15px #FF3333; }
+        
+        .status-text {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+            min-height: 20px;
+            color: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>社員食堂ログ</h1>
+    </header>
+
+    <div class="main-section">
+        <button id="sendBtn" onclick="sendData()">食堂代を送信</button>
+        
+        <div class="input-group">
+            <label>使った金額を入力（円）</label>
+            <input type="number" id="amountInput" pattern="\d*" placeholder="0" autofocus>
+        </div>
+        
+        <div id="statusMsg" class="status-text"></div>
+    </div>
+</div>
+
+<script>
+    // ★★★ ここにGASのウェブアプリURLを貼り付ける ★★★
+    const GAS_WEBAPP_URL = "★ここにGASのURLを貼り付ける★";
+
+    function sendData() {
+        const amount = document.getElementById("amountInput").value;
+        const statusMsg = document.getElementById("statusMsg");
+        const sendBtn = document.getElementById("sendBtn");
+
+        if (!amount || amount <= 0) {
+            statusMsg.textContent = "金額を入力してください！";
+            statusMsg.style.color = "#FF3333";
+            return;
+        }
+
+        // 送信中のUI変更
+        sendBtn.textContent = "送信中...";
+        sendBtn.style.backgroundColor = "#550000";
+        sendBtn.disabled = true;
+        statusMsg.textContent = "";
+
+        const payload = {
+            type: "shokudo",
+            amount: amount
+        };
+
+        // no-corsで強制送信
+        fetch(GAS_WEBAPP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            // 送信完了
+            sendBtn.textContent = "COMPLETE!";
+            sendBtn.style.backgroundColor = "#FF3333";
+            document.getElementById("amountInput").value = "";
+            
+            setTimeout(() => {
+                sendBtn.textContent = "食堂代を送信";
+                sendBtn.disabled = false;
+            }, 2000);
+        })
+        .catch(error => {
+            statusMsg.textContent = "通信エラーが発生しました";
+            statusMsg.style.color = "#FF3333";
+            sendBtn.textContent = "食堂代を送信";
+            sendBtn.style.backgroundColor = "#FF3333";
+            sendBtn.disabled = false;
+        });
+    }
+</script>
+
+</body>
+</html>
